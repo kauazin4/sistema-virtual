@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GestãoPro - Sistema de Gerenciamento</title>
+    
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Sistema de gerenciamento de produtos e pedidos offline.">
+    <link rel="manifest" id="manifest-placeholder">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ==========================================================================
+           1. ESTILOS GERAIS E VARIÁVEIS DE DESIGN
+           ========================================================================== */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #475569;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Utilidades */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+
+        /* Form / Inputs */
+        input, select, button {
+            outline: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem 1rem;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        button.btn-danger {
+            background: var(--danger);
+        }
+
+        button.btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* ==========================================================================
+           2. TELA DE LOGIN
+           ========================================================================== */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: var(--bg-secondary);
+            padding: 2.5rem;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .login-card i {
+            font-size: 3rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .login-card h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .login-card form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* ==========================================================================
+           3. ESTRUTURA PRINCIPAL (HEADER, NAV, MAIN)
+           ========================================================================== */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .company-info h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .company-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Navegação por Abas */
+        nav.tabs-nav {
+            background: var(--bg-secondary);
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border);
+            padding: 0 1rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+            padding: 1rem 1.5rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: transparent;
+            color: var(--text-main);
+            transform: none;
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards & Grids */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Tabelas */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges de Status */
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .badge-pago { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-entregue { background: rgba(59, 130, 246, 0.2); color: var(--accent); }
+        .badge-pendente { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        /* Search Results Highlight */
+        .search-result-box {
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-top: 1rem;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* ==========================================================================
+           4. MODAL / NOTA (RECIBO PARA IMPRESSÃO)
+           ========================================================================== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            color: #000;
+            padding: 2rem;
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .receipt {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-body div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .receipt-footer {
+            border-top: 1px dashed #000;
+            padding-top: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        /* Estilos Exclusivos para Impressão */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receipt-modal, #receipt-modal * {
+                visibility: visible;
+            }
+            #receipt-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white;
+            }
+            .modal-content {
+                box-shadow: none;
+                padding: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Responsividade Ajustada */
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            main {
+                padding: 1rem;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <i class="fa-solid fa-box-open"></i>
+            <h2>Acesso ao GestãoPro</h2>
+            <p>Sua senha inicial padrão é: <strong>1234</strong></p>
+            <form id="login-form">
+                <input type="password" id="login-password" placeholder="Digite sua senha" required>
+                <button type="submit"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <header id="main-header" class="hidden">
+        <div class="company-info">
+            <h1 id="display-company-name">Empresa Exemplo</h1>
+            <p><i class="fa-solid fa-user-tie"></i> Proprietário: <span id="display-owner-name">Não Cadastrado</span></p>
+        </div>
+        <div class="user-actions">
+            <button onclick="system.logout()" class="btn-danger" style="padding: 0.5rem 0.8rem; font-size: 0.85rem;">
+                <i class="fa-solid fa-power-off"></i> Sair
+            </button>
+        </div>
+    </header>
+
+    <nav class="tabs-nav hidden" id="main-nav">
+        <button class="tab-btn active" onclick="system.switchTab('tab-dashboard')"><i class="fa-solid fa-chart-line"></i> Painel</button>
+        <button class="tab-btn" onclick="system.switchTab('tab-products')"><i class="fa-solid fa-boxes-stacked"></i> Estoque</button>
+        <button class="tab-btn" onclick="system.switchTab('tab-orders')"><i class="fa-solid fa-cart-shopping"></i> Pedidos</button>
+        <button class="tab-btn" onclick="system.switchTab('tab-settings')"><i class="fa-solid fa-gear"></i> Configurações</button>
+    </nav>
+
+    <main id="main-content" class="hidden">
+
+        <section id="tab-dashboard" class="tab-content active">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Consulta Rápida de Estoque</div>
+                <input type="text" id="search-input" placeholder="Digite o nome do produto..." oninput="system.searchProducts()" style="width: 100%;">
+                
+                <div id="search-results" class="search-result-box hidden">
+                    </div>
+            </div>
+        </section>
+
+        <section id="tab-products" class="tab-content">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-plus-circle"></i> Cadastrar / Incrementar Produto</div>
+                <form id="product-form">
+                    <div class="form-grid">
+                        <input type="text" id="prod-name" placeholder="Nome do Produto" required>
+                        <input type="number" id="prod-qty" placeholder="Quantidade" min="1" required>
+                    </div>
+                    <button type="submit"><i class="fa-solid fa-save"></i> Salvar Produto</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-list"></i> Produtos Cadastrados</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Em Estoque</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-orders" class="tab-content">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-cart-plus"></i> Novo Pedido</div>
+                <form id="order-form">
+                    <div class="form-grid">
+                        <input type="text" id="order-client" placeholder="Nome do Cliente" required>
+                        <select id="order-product-select" required>
+                            <option value="">Selecione um Produto...</option>
+                        </select>
+                        <input type="number" id="order-qty" placeholder="Quantidade" min="1" required>
+                        <input type="number" step="0.01" id="order-price" placeholder="Preço Total (R$)" required>
+                        <input type="date" id="order-date" required>
+                        <select id="order-status" required>
+                            <option value="Pago">Pago</option>
+                            <option value="Entregue">Entregue</option>
+                            <option value="Pendente">Pendente</option>
+                        </select>
+                    </div>
+                    <button type="submit"><i class="fa-solid fa-check"></i> Confirmar Pedido</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-receipt"></i> Histórico de Pedidos</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Total</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-settings" class="tab-content">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-building"></i> Dados da Empresa</div>
+                <form id="company-form">
+                    <div class="form-grid">
+                        <input type="text" id="company-name-input" placeholder="Nome da Empresa" required>
+                        <input type="text" id="company-owner-input" placeholder="Nome do Proprietário" required>
+                    </div>
+                    <button type="submit"><i class="fa-solid fa-rotate"></i> Atualizar Dados</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-key"></i> Alterar Senha de Acesso</div>
+                <form id="password-form">
+                    <div class="form-grid">
+                        <input type="password" id="new-password" placeholder="Nova Senha" required>
+                    </div>
+                    <button type="submit"><i class="fa-solid fa-shield-halved"></i> Alterar Senha</button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="receipt-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="receipt" id="receipt-printable">
+                <div class="receipt-header">
+                    <h2 id="r-company">Empresa</h2>
+                    <p>Comprovante de Venda</p>
+                </div>
+                <div class="receipt-body">
+                    <div><span>Data:</span> <strong id="r-date">--</strong></div>
+                    <div><span>Cliente:</span> <strong id="r-client">--</strong></div>
+                    <div><span>Produto:</span> <strong id="r-product">--</strong></div>
+                    <div><span>Quantidade:</span> <strong id="r-qty">--</strong></div>
+                    <div><span>Status:</span> <strong id="r-status">--</strong></div>
+                    <hr style="margin: 0.5rem 0; border: none; border-top: 1px dashed #000;">
+                    <div><span>Total:</span> <strong id="r-total">R$ 0,00</strong></div>
+                </div>
+                <div class="receipt-footer">
+                    <p>Obrigado pela preferência!</p>
+                </div>
+            </div>
+            <div class="no-print flex gap-2" style="margin-top: 1.5rem; justify-content: flex-end;">
+                <button onclick="window.print()" style="background: var(--success);"><i class="fa-solid fa-print"></i> Imprimir</button>
+                <button onclick="system.closeReceipt()" class="btn-danger">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SystemManager {
+            constructor() {
+                // Estado da aplicação alimentado pelo localStorage
+                this.company = JSON.parse(localStorage.getItem('gp_company')) || { name: 'Sua Empresa', owner: 'Seu Nome' };
+                this.password = localStorage.getItem('gp_password') || '1234';
+                this.products = JSON.parse(localStorage.getItem('gp_products')) || [];
+                this.orders = JSON.parse(localStorage.getItem('gp_orders')) || [];
+                
+                this.initApp();
+            }
+
+            initApp() {
+                this.bindEvents();
+                this.checkAuth();
+                this.updateUI();
+                
+                // Seta data atual no formulário de pedidos
+                document.getElementById('order-date').valueToDate = new Date();
+                document.getElementById('order-date').value = new Date().toISOString().split('T')[0];
+            }
+
+            // Garante persistência dos dados
+            saveState() {
+                localStorage.setItem('gp_company', JSON.stringify(this.company));
+                localStorage.setItem('gp_password', this.password);
+                localStorage.setItem('gp_products', JSON.stringify(this.products));
+                localStorage.setItem('gp_orders', JSON.stringify(this.orders));
+                this.updateUI();
+            }
+
+            // Sistema de Autenticação Basico
+            checkAuth() {
+                const isAuthenticated = sessionStorage.getItem('gp_authenticated') === 'true';
+                if (isAuthenticated) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('main-header').classList.remove('hidden');
+                    document.getElementById('main-nav').classList.remove('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                } else {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    document.getElementById('main-header').classList.add('hidden');
+                    document.getElementById('main-nav').classList.add('hidden');
+                    document.getElementById('main-content').classList.add('hidden');
+                }
+            }
+
+            login(pass) {
+                if (pass === this.password) {
+                    sessionStorage.setItem('gp_authenticated', 'true');
+                    this.checkAuth();
+                } else {
+                    alert('Senha incorreta!');
+                }
+            }
+
+            logout() {
+                sessionStorage.removeItem('gp_authenticated');
+                this.checkAuth();
+            }
+
+            // Controle de Abas
+            switchTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                
+                document.getElementById(tabId).classList.add('active');
+                event.currentTarget.classList.add('active');
+            }
+
+            // Atualização dos componentes visuais
+            updateUI() {
+                // Empresa
+                document.getElementById('display-company-name').textContent = this.company.name;
+                document.getElementById('display-owner-name').textContent = this.company.owner;
+                document.getElementById('company-name-input').value = this.company.name;
+                document.getElementById('company-owner-input').value = this.company.owner;
+
+                // Tabela de Produtos
+                const prodTbody = document.getElementById('products-table-body');
+                const prodSelect = document.getElementById('order-product-select');
+                
+                prodTbody.innerHTML = '';
+                prodSelect.innerHTML = '<option value="">Selecione um Produto...</option>';
+
+                this.products.forEach((prod, index) => {
+                    // Preenche Tabela
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${prod.name}</strong></td>
+                        <td>${prod.qty} un</td>
+                        <td>
+                            <button onclick="system.deleteProduct(${index})" class="btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    prodTbody.appendChild(tr);
+
+                    // Preenche Select de Pedidos
+                    const option = document.createElement('option');
+                    option.value = prod.name;
+                    option.textContent = `${prod.name} (Disponível: ${prod.qty})`;
+                    prodSelect.appendChild(option);
+                });
+
+                // Tabela de Pedidos
+                const orderTbody = document.getElementById('orders-table-body');
+                orderTbody.innerHTML = '';
+
+                this.orders.forEach((ord, index) => {
+                    const tr = document.createElement('tr');
+                    const badgeClass = `badge-${ord.status.toLowerCase()}`;
+                    tr.innerHTML = `
+                        <td>${ord.client}</td>
+                        <td>${ord.product}</td>
+                        <td>${ord.qty}</td>
+                        <td>R$ ${parseFloat(ord.price).toFixed(2)}</td>
+                        <td>${ord.date}</td>
+                        <td><span class="badge ${badgeClass}">${ord.status}</span></td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button onclick="system.openReceipt(${index})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </button>
+                                <button onclick="system.deleteOrder(${index})" class="btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    orderTbody.appendChild(tr);
+                });
+            }
+
+            // Lógica de Produtos
+            saveProduct(name, qty) {
+                const existingIndex = this.products.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+                if (existingIndex > -1) {
+                    this.products[existingIndex].qty += parseInt(qty);
+                } else {
+                    this.products.push({ name, qty: parseInt(qty) });
+                }
+                this.saveState();
+            }
+
+            deleteProduct(index) {
+                if(confirm("Deseja realmente excluir este produto?")) {
+                    this.products.splice(index, 1);
+                    this.saveState();
+                }
+            }
+
+            // Lógica de Pedidos com Baixa Automática em Estoque
+            saveOrder(client, product, qty, price, date, status) {
+                qty = parseInt(qty);
+                const prodIndex = this.products.findIndex(p => p.name === product);
+
+                if (prodIndex === -1) {
+                    alert("Produto não encontrado.");
+                    return;
+                }
+
+                if (this.products[prodIndex].qty < qty) {
+                    alert(`Estoque insuficiente! Apenas ${this.products[prodIndex].qty} unidades disponíveis.`);
+                    return;
+                }
+
+                // Subtrai do Estoque
+                this.products[prodIndex].qty -= qty;
+
+                // Grava o Pedido
+                this.orders.push({ client, product, qty, price, date, status });
+                this.saveState();
+                alert("Pedido confirmado com sucesso!");
+            }
+
+            deleteOrder(index) {
+                if(confirm("Deseja cancelar/excluir este pedido? (Atenção: O estoque não será reajustado automaticamente)")) {
+                    this.orders.splice(index, 1);
+                    this.saveState();
+                }
+            }
+
+            // Lógica de Pesquisa
+            searchProducts() {
+                const query = document.getElementById('search-input').value.toLowerCase().trim();
+                const resultBox = document.getElementById('search-results');
+
+                if (query === "") {
+                    resultBox.classList.add('hidden');
+                    return;
+                }
+
+                const found = this.products.find(p => p.name.toLowerCase().includes(query));
+
+                resultBox.classList.remove('hidden');
+                if (found) {
+                    resultBox.innerHTML = `
+                        <p style="color: var(--text-muted); font-size: 0.85rem;">Produto encontrado:</p>
+                        <h3 style="margin-top: 0.2rem;">${found.name}</h3>
+                        <p style="margin-top: 0.5rem; font-size: 1.1rem;">Estoque Disponível: <strong>${found.qty} un</strong></p>
+                    `;
+                } else {
+                    resultBox.innerHTML = `<p style="color: var(--danger);">Nenhum produto localizado com esse nome.</p>`;
+                }
+            }
+
+            // Emissão de Notas
+            openReceipt(orderIndex) {
+                const ord = this.orders[orderIndex];
+                document.getElementById('r-company').textContent = this.company.name;
+                document.getElementById('r-date').textContent = ord.date;
+                document.getElementById('r-client').textContent = ord.client;
+                document.getElementById('r-product').textContent = ord.product;
+                document.getElementById('r-qty').textContent = ord.qty;
+                document.getElementById('r-status').textContent = ord.status;
+                document.getElementById('r-total').textContent = `R$ ${parseFloat(ord.price).toFixed(2)}`;
+
+                document.getElementById('receipt-modal').classList.remove('hidden');
+            }
+
+            closeReceipt() {
+                document.getElementById('receipt-modal').classList.add('hidden');
+            }
+
+            // Vincular Submissões de Formulários aos Eventos
+            bindEvents() {
+                document.getElementById('login-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.login(document.getElementById('login-password').value);
+                    document.getElementById('login-password').value = '';
+                });
+
+                document.getElementById('product-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveProduct(
+                        document.getElementById('prod-name').value,
+                        document.getElementById('prod-qty').value
+                    );
+                    document.getElementById('product-form').reset();
+                });
+
+                document.getElementById('order-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveOrder(
+                        document.getElementById('order-client').value,
+                        document.getElementById('order-product-select').value,
+                        document.getElementById('order-qty').value,
+                        document.getElementById('order-price').value,
+                        document.getElementById('order-date').value,
+                        document.getElementById('order-status').value
+                    );
+                    document.getElementById('order-form').reset();
+                    document.getElementById('order-date').value = new Date().toISOString().split('T')[0];
+                });
+
+                document.getElementById('company-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.company.name = document.getElementById('company-name-input').value;
+                    this.company.owner = document.getElementById('company-owner-input').value;
+                    this.saveState();
+                    alert("Dados da empresa atualizados!");
+                });
+
+                document.getElementById('password-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.password = document.getElementById('new-password').value;
+                    this.saveState();
+                    document.getElementById('password-form').reset();
+                    alert("Senha alterada com sucesso!");
+                });
+            }
+        }
+
+        // Inicializa a Aplicação
+        const system = new SystemManager();
+
+        /* ==========================================================================
+           5. SUPORTE PWA E OFFLINE (Service Worker Inline)
+           ========================================================================== */
+        // Gera Manifest dinamicamente
+        const manifestData = {
+            "name": "GestãoPro",
+            "short_name": "GestãoPro",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#0f172a",
+            "icons": [{
+                "src": "https://cdn-icons-png.flaticon.com/512/1170/1170576.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }]
+        };
+        const stringManifest = JSON.stringify(manifestData);
+        const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blobManifest);
+        document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+
+        // Registro de Service Worker para funcionalidade Offline completa
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'gestaopro-v1';
+                self.addEventListener('install', (e) => {
+                    e.waitUntil(
+                        caches.open(CACHE_NAME).then((cache) => {
+                            return cache.addAll(['./']);
+                        })
+                    );
+                });
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then((res) => res || fetch(e.request))
+                    );
+                });
+            `;
+            const blobSW = new Blob([swCode], { type: 'text/javascript' });
+            const swURL = URL.createObjectURL(blobSW);
+
+            navigator.serviceWorker.register(swURL).catch(() => {
+                // Silencioso se o ambiente não suportar Blob ServiceWorkers
+            });
+        }
+    </script>
+<script>
+(function() {
+    // Verifica se já existem dados de empresa e senha configurados
+    const isFirstAccess = !localStorage.getItem('gp_company') || !localStorage.getItem('gp_password');
+    const loginCard = document.querySelector('.login-card');
+
+    if (isFirstAccess && loginCard) {
+        // Altera a interface do card para Cadastro Inicial
+        loginCard.innerHTML = `
+            <i class="fa-solid fa-user-plus"></i>
+            <h2>Cadastro Inicial</h2>
+            <p>Configure os dados do seu sistema para começar a usar.</p>
+            <form id="setup-form">
+                <input type="text" id="setup-company" placeholder="Nome da Empresa" required style="margin-bottom: 0.8rem; width: 100%;">
+                <input type="text" id="setup-owner" placeholder="Nome do Proprietário" required style="margin-bottom: 0.8rem; width: 100%;">
+                <input type="password" id="setup-password" placeholder="Crie uma Senha" required style="margin-bottom: 0.8rem; width: 100%;">
+                <button type="submit" style="width: 100%;"><i class="fa-solid fa-check"></i> Salvar e Entrar</button>
+            </form>
+        `;
+
+        // Manipula o envio do formulário de cadastro inicial
+        document.getElementById('setup-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const companyName = document.getElementById('setup-company').value.trim();
+            const ownerName = document.getElementById('setup-owner').value.trim();
+            const newPassword = document.getElementById('setup-password').value;
+
+            // Salva as configurações iniciais
+            system.company = { name: companyName, owner: ownerName };
+            system.password = newPassword;
+            system.saveState();
+
+            // Autentica o usuário automaticamente
+            sessionStorage.setItem('gp_authenticated', 'true');
+            system.checkAuth();
+            
+            alert('Cadastro realizado com sucesso!');
+            window.location.reload();
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    // 1. Injeta o campo "Marca" no formulário de produtos
+    const productGrid = document.querySelector('#product-form .form-grid');
+    if (productGrid) {
+        const brandInput = document.createElement('input');
+        brandInput.type = 'text';
+        brandInput.id = 'prod-brand';
+        brandInput.placeholder = 'Marca do Produto';
+        brandInput.required = true;
+        
+        // Insere a marca entre o nome e a quantidade
+        const qtyInput = document.getElementById('prod-qty');
+        productGrid.insertBefore(brandInput, qtyInput);
+    }
+
+    // 2. Atualiza o cabeçalho da tabela de produtos para incluir a coluna "Marca"
+    const tableHeader = document.querySelector('#tab-products table thead tr');
+    if (tableHeader) {
+        tableHeader.innerHTML = `
+            <th>Produto</th>
+            <th>Marca</th>
+            <th>Em Estoque</th>
+            <th>Ações</th>
+        `;
+    }
+
+    // 3. Sobrescreve a função de salvar produto para incluir a marca
+    system.saveProduct = function(name, brand, qty) {
+        qty = parseInt(qty);
+        const existingIndex = this.products.findIndex(
+            p => p.name.toLowerCase() === name.toLowerCase() && (p.brand || '').toLowerCase() === brand.toLowerCase()
+        );
+
+        if (existingIndex > -1) {
+            this.products[existingIndex].qty += qty;
+        } else {
+            this.products.push({ name, brand, qty });
+        }
+        this.saveState();
+    };
+
+    // 4. Sobrescreve a atualização da interface da tabela de produtos
+    const originalUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        originalUpdateUI();
+
+        const prodTbody = document.getElementById('products-table-body');
+        const prodSelect = document.getElementById('order-product-select');
+        
+        if (!prodTbody) return;
+
+        prodTbody.innerHTML = '';
+        prodSelect.innerHTML = '<option value="">Selecione um Produto...</option>';
+
+        this.products.forEach((prod, index) => {
+            const brandText = prod.brand ? prod.brand : 'Sem marca';
+
+            // Linha da Tabela
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${prod.name}</strong></td>
+                <td>${brandText}</td>
+                <td>${prod.qty} un</td>
+                <td>
+                    <button onclick="system.deleteProduct(${index})" class="btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            prodTbody.appendChild(tr);
+
+            // Opção no Select de Pedidos
+            const option = document.createElement('option');
+            option.value = prod.name;
+            option.textContent = `${prod.name} (${brandText}) - Disp: ${prod.qty}`;
+            prodSelect.appendChild(option);
+        });
+    };
+
+    // 5. Atualiza o evento de envio do formulário de produtos
+    const productForm = document.getElementById('product-form');
+    if (productForm) {
+        // Remove ouvintes antigos substituindo o elemento por um clone
+        const newForm = productForm.cloneNode(true);
+        productForm.parentNode.replaceChild(newForm, productForm);
+
+        newForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('prod-name').value;
+            const brand = document.getElementById('prod-brand').value;
+            const qty = document.getElementById('prod-qty').value;
+
+            system.saveProduct(name, brand, qty);
+            newForm.reset();
+        });
+    }
+
+    // Renderiza a interface ajustada
+    system.updateUI();
+})();
+</script>
+<script>
+(function() {
+    // 1. Cria a seção de lista de produtos no Painel
+    const dashboardTab = document.getElementById('tab-dashboard');
+    if (dashboardTab) {
+        const productsGridCard = document.createElement('div');
+        productsGridCard.className = 'card';
+        productsGridCard.innerHTML = `
+            <div class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Todos os Produtos em Estoque</div>
+            <div id="dashboard-products-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                </div>
+        `;
+        dashboardTab.appendChild(productsGridCard);
+    }
+
+    // 2. Sobrescreve a atualização da interface para renderizar os produtos no Painel
+    const originalUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        originalUpdateUI(); // Executa a atualização padrão do sistema
+
+        const dashboardList = document.getElementById('dashboard-products-list');
+        if (!dashboardList) return;
+
+        dashboardList.innerHTML = '';
+
+        if (this.products.length === 0) {
+            dashboardList.innerHTML = '<p style="color: var(--text-muted); grid-column: 1 / -1;">Nenhum produto cadastrado até o momento.</p>';
+            return;
+        }
+
+        // Renderiza cada produto como um card resumido no Painel
+        this.products.forEach(prod => {
+            const card = document.createElement('div');
+            card.style.cssText = `
+                background: var(--bg-card);
+                padding: 1rem;
+                border-radius: var(--radius);
+                border-left: 4px solid ${prod.qty > 5 ? 'var(--accent)' : 'var(--warning)'};
+            `;
+
+            const brandText = prod.brand ? `<small style="color: var(--text-muted); display: block;">${prod.brand}</small>` : '';
+
+            card.innerHTML = `
+                ${brandText}
+                <strong style="font-size: 1.05rem; display: block; margin-bottom: 0.5rem;">${prod.name}</strong>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">
+                    Estoque: <span style="color: var(--text-main); font-weight: 600;">${prod.qty} un</span>
+                </div>
+            `;
+            dashboardList.appendChild(card);
+        });
+    };
+
+    // Atualiza a tela imediatamente após carregar o script
+    system.updateUI();
+})();
+</script>
+<script>
+(function() {
+    // 1. Adiciona o campo "Preço Unitário" no cadastro de produtos
+    const productGrid = document.querySelector('#product-form .form-grid');
+    if (productGrid) {
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.step = '0.01';
+        priceInput.id = 'prod-unit-price';
+        priceInput.placeholder = 'Preço Unitário (R$)';
+        priceInput.required = true;
+
+        // Insere o campo antes do botão de salvar
+        productGrid.appendChild(priceInput);
+    }
+
+    // 2. Atualiza o cabeçalho da tabela de produtos para incluir "Preço"
+    const tableHeader = document.querySelector('#tab-products table thead tr');
+    if (tableHeader) {
+        tableHeader.innerHTML = `
+            <th>Produto</th>
+            <th>Marca</th>
+            <th>Preço Unit.</th>
+            <th>Em Estoque</th>
+            <th>Ações</th>
+        `;
+    }
+
+    // 3. Sobrescreve a função de salvar produto para guardar o Preço Unitário
+    system.saveProduct = function(name, brand, qty, price) {
+        qty = parseInt(qty);
+        price = parseFloat(price);
+
+        const existingIndex = this.products.findIndex(
+            p => p.name.toLowerCase() === name.toLowerCase() && (p.brand || '').toLowerCase() === (brand || '').toLowerCase()
+        );
+
+        if (existingIndex > -1) {
+            this.products[existingIndex].qty += qty;
+            this.products[existingIndex].price = price; // Atualiza o preço com o valor recente
+        } else {
+            this.products.push({ name, brand: brand || '', qty, price });
+        }
+        this.saveState();
+    };
+
+    // 4. Torna o campo de Preço Total do Pedido somente leitura (calculado automaticamente)
+    const orderPriceInput = document.getElementById('order-price');
+    if (orderPriceInput) {
+        orderPriceInput.readOnly = true;
+        orderPriceInput.placeholder = 'Preço Total (R$) - Automático';
+        orderPriceInput.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+    }
+
+    // 5. Função para calcular o Preço Total no Pedido automaticamente
+    function calculateOrderTotal() {
+        const selectedProdName = document.getElementById('order-product-select').value;
+        const qty = parseInt(document.getElementById('order-qty').value) || 0;
+        
+        if (!selectedProdName) {
+            document.getElementById('order-price').value = '';
+            return;
+        }
+
+        const product = system.products.find(p => p.name === selectedProdName);
+        if (product && product.price) {
+            const total = product.price * qty;
+            document.getElementById('order-price').value = total > 0 ? total.toFixed(2) : '';
+        } else {
+            document.getElementById('order-price').value = '';
+        }
+    }
+
+    // Associa o cálculo automático aos campos de produto e quantidade do pedido
+    document.getElementById('order-product-select').addEventListener('change', calculateOrderTotal);
+    document.getElementById('order-qty').addEventListener('input', calculateOrderTotal);
+
+    // 6. Sobrescreve a atualização da interface da tabela de produtos
+    const originalUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        originalUpdateUI();
+
+        const prodTbody = document.getElementById('products-table-body');
+        const prodSelect = document.getElementById('order-product-select');
+        
+        if (!prodTbody) return;
+
+        prodTbody.innerHTML = '';
+        prodSelect.innerHTML = '<option value="">Selecione um Produto...</option>';
+
+        this.products.forEach((prod, index) => {
+            const brandText = prod.brand ? prod.brand : 'Sem marca';
+            const unitPriceText = prod.price ? `R$ ${parseFloat(prod.price).toFixed(2)}` : 'R$ 0,00';
+
+            // Linha da Tabela de Produtos
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${prod.name}</strong></td>
+                <td>${brandText}</td>
+                <td>${unitPriceText}</td>
+                <td>${prod.qty} un</td>
+                <td>
+                    <button onclick="system.deleteProduct(${index})" class="btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            prodTbody.appendChild(tr);
+
+            // Opção no Select de Pedidos
+            const option = document.createElement('option');
+            option.value = prod.name;
+            option.textContent = `${prod.name} (${brandText}) - ${unitPriceText} - Disp: ${prod.qty}`;
+            prodSelect.appendChild(option);
+        });
+    };
+
+    // 7. Atualiza o envio do formulário de cadastro de produtos
+    const productForm = document.getElementById('product-form');
+    if (productForm) {
+        const newForm = productForm.cloneNode(true);
+        productForm.parentNode.replaceChild(newForm, productForm);
+
+        newForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('prod-name').value;
+            const brand = document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '';
+            const qty = document.getElementById('prod-qty').value;
+            const price = document.getElementById('prod-unit-price').value;
+
+            system.saveProduct(name, brand, qty, price);
+            newForm.reset();
+        });
+    }
+
+    // Atualiza a tela imediatamente
+    system.updateUI();
+})();
+</script>
+<script>
+(function() {
+    // Array temporário para armazenar o carrinho do pedido atual
+    window.currentCart = [];
+
+    // 1. Reestrutura o formulário de Pedidos
+    const orderForm = document.getElementById('order-form');
+    if (orderForm) {
+        orderForm.innerHTML = `
+            <div class="form-grid">
+                <input type="text" id="order-client" placeholder="Nome do Cliente" required style="grid-column: 1 / -1;">
+            </div>
+
+            <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                <h4 style="margin-bottom: 0.8rem; color: var(--accent);"><i class="fa-solid fa-cart-plus"></i> Adicionar Produtos ao Pedido</h4>
+                <div class="form-grid">
+                    <select id="order-product-select">
+                        <option value="">Selecione um Produto...</option>
+                    </select>
+                    <input type="number" id="order-qty" placeholder="Qtd" min="1" value="1">
+                    <button type="button" id="btn-add-item" style="background: var(--accent);"><i class="fa-solid fa-plus"></i> Incluir Item</button>
+                </div>
+
+                <div id="cart-items-list" style="margin-top: 1rem;">
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Nenhum produto adicionado ao carrinho.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Valor Total (R$)</label>
+                    <input type="number" id="order-total-price" placeholder="R$ 0,00" readonly style="background: rgba(255,255,255,0.05); font-weight: bold; width:100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Valor de Entrada / Pago (R$)</label>
+                    <input type="number" step="0.01" id="order-paid-amount" placeholder="Ex: 50.00 (deixe 0 se nada)" min="0" value="0" style="width:100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Situação do Pagamento</label>
+                    <select id="order-status" disabled style="width:100%; opacity: 0.8;">
+                        <option value="Pendente" selected>Pendente</option>
+                        <option value="Parcial">Pago Parcial</option>
+                        <option value="Pago">Pago</option>
+                    </select>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <input type="date" id="order-date" required style="width:100%;">
+                </div>
+            </div>
+
+            <button type="submit" style="margin-top: 1rem; width: 100%;"><i class="fa-solid fa-check"></i> Confirmar Pedido</button>
+        `;
+    }
+
+    // Função para atualizar a visualização do carrinho e calcular totais
+    window.renderCart = function() {
+        const cartList = document.getElementById('cart-items-list');
+        const totalPriceInput = document.getElementById('order-total-price');
+        if (!cartList) return;
+
+        if (window.currentCart.length === 0) {
+            cartList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Nenhum produto adicionado ao carrinho.</p>';
+            totalPriceInput.value = '0.00';
+            updatePaymentStatus();
+            return;
+        }
+
+        let html = '<table style="width:100%; font-size: 0.85rem;"><thead><tr><th>Item</th><th>Qtd</th><th>Subtotal</th><th>Ação</th></tr></thead><tbody>';
+        let grandTotal = 0;
+
+        window.currentCart.forEach((item, index) => {
+            const subtotal = item.price * item.qty;
+            grandTotal += subtotal;
+            html += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.qty}</td>
+                    <td>R$ ${subtotal.toFixed(2)}</td>
+                    <td><button type="button" onclick="removeCartItem(${index})" class="btn-danger" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `;
+        });
+        html += '</tbody></table>';
+        cartList.innerHTML = html;
+        totalPriceInput.value = grandTotal.toFixed(2);
+        updatePaymentStatus();
+    };
+
+    // Remove item do carrinho temporário
+    window.removeCartItem = function(index) {
+        window.currentCart.splice(index, 1);
+        window.renderCart();
+    };
+
+    // Atualiza dinamicamente o status do pagamento com base no valor de entrada
+    function updatePaymentStatus() {
+        const total = parseFloat(document.getElementById('order-total-price').value) || 0;
+        const paid = parseFloat(document.getElementById('order-paid-amount').value) || 0;
+        const statusSelect = document.getElementById('order-status');
+
+        if (paid <= 0) {
+            statusSelect.value = 'Pendente';
+        } else if (paid >= total && total > 0) {
+            statusSelect.value = 'Pago';
+        } else {
+            statusSelect.value = 'Parcial';
+        }
+    }
+
+    document.getElementById('order-paid-amount').addEventListener('input', updatePaymentStatus);
+
+    // Evento de Adicionar Item ao Carrinho
+    document.getElementById('btn-add-item').addEventListener('click', function() {
+        const prodName = document.getElementById('order-product-select').value;
+        const qty = parseInt(document.getElementById('order-qty').value) || 1;
+
+        if (!prodName) {
+            alert('Selecione um produto.');
+            return;
+        }
+
+        const product = system.products.find(p => p.name === prodName);
+        if (!product) return;
+
+        // Verifica estoque
+        const inCartQty = window.currentCart.filter(i => i.name === prodName).reduce((acc, i) => acc + i.qty, 0);
+        if (product.qty < (inCartQty + qty)) {
+            alert(`Estoque insuficiente! Você já tem ${inCartQty} no carrinho e o estoque atual é ${product.qty}.`);
+            return;
+        }
+
+        window.currentCart.push({
+            name: product.name,
+            qty: qty,
+            price: product.price || 0
+        });
+
+        document.getElementById('order-qty').value = 1;
+        window.renderCart();
+    });
+
+    // 2. Atualiza cabeçalho da tabela de Pedidos
+    const ordersTableHeader = document.querySelector('#tab-orders table thead tr');
+    if (ordersTableHeader) {
+        ordersTableHeader.innerHTML = `
+            <th>Cliente</th>
+            <th>Itens</th>
+            <th>Total</th>
+            <th>Pago / Entrada</th>
+            <th>Falta</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th>Ações</th>
+        `;
+    }
+
+    // 3. Função para abater/quitar valores de um pedido existente
+    system.payOrderBalance = function(index) {
+        const ord = this.orders[index];
+        const remaining = ord.price - ord.paid;
+
+        const addPay = prompt(`Cliente: ${ord.client}\nTotal do Pedido: R$ ${ord.price.toFixed(2)}\nJá Pago: R$ ${ord.paid.toFixed(2)}\nSaldo Devedor: R$ ${remaining.toFixed(2)}\n\nDigite o valor que o cliente está pagando agora:`, remaining.toFixed(2));
+
+        if (addPay !== null) {
+            const amount = parseFloat(addPay);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Valor inválido.');
+                return;
+            }
+
+            ord.paid = (ord.paid || 0) + amount;
+            if (ord.paid >= ord.price) {
+                ord.paid = ord.price;
+                ord.status = 'Pago';
+            } else {
+                ord.status = 'Parcial';
+            }
+
+            this.saveState();
+            alert('Pagamento atualizado com sucesso!');
+        }
+    };
+
+    // 4. Sobrescreve a renderização do histórico de pedidos
+    const originalUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        originalUpdateUI();
+
+        const orderTbody = document.getElementById('orders-table-body');
+        if (!orderTbody) return;
+
+        orderTbody.innerHTML = '';
+
+        this.orders.forEach((ord, index) => {
+            const total = parseFloat(ord.price || 0);
+            const paid = parseFloat(ord.paid || 0);
+            const rest = total - paid;
+
+            // Formatação dos Itens
+            let itemsText = '';
+            if (Array.isArray(ord.items)) {
+                itemsText = ord.items.map(i => `${i.qty}x ${i.name}`).join('<br>');
+            } else {
+                itemsText = `${ord.qty || 1}x ${ord.product}`;
+            }
+
+            // Define Badge
+            let badgeStyle = 'background: rgba(245, 158, 11, 0.2); color: var(--warning);';
+            if (ord.status === 'Pago') badgeStyle = 'background: rgba(16, 185, 129, 0.2); color: var(--success);';
+            if (ord.status === 'Parcial') badgeStyle = 'background: rgba(59, 130, 246, 0.2); color: var(--accent);';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${ord.client}</strong></td>
+                <td style="font-size:0.85rem;">${itemsText}</td>
+                <td>R$ ${total.toFixed(2)}</td>
+                <td style="color: var(--success);">R$ ${paid.toFixed(2)}</td>
+                <td style="color: ${rest > 0 ? 'var(--danger)' : 'var(--text-muted)'};">R$ ${rest.toFixed(2)}</td>
+                <td>${ord.date}</td>
+                <td><span class="badge" style="${badgeStyle}">${ord.status || 'Pendente'}</span></td>
+                <td>
+                    <div class="flex gap-2">
+                        ${rest > 0 ? `
+                        <button onclick="system.payOrderBalance(${index})" title="Registrar Pagamento" style="background: var(--success); padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        </button>` : ''}
+                        <button onclick="system.openReceipt(${index})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </button>
+                        <button onclick="system.deleteOrder(${index})" class="btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            orderTbody.appendChild(tr);
+        });
+    };
+
+    // 5. Sobrescreve a submissão do formulário de pedidos
+    const orderFormElem = document.getElementById('order-form');
+    if (orderFormElem) {
+        const newOrderForm = orderFormElem.cloneNode(true);
+        orderFormElem.parentNode.replaceChild(newOrderForm, orderFormElem);
+
+        newOrderForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (window.currentCart.length === 0) {
+                alert('Adicione pelo menos um produto ao carrinho.');
+                return;
+            }
+
+            const client = document.getElementById('order-client').value;
+            const totalPrice = parseFloat(document.getElementById('order-total-price').value) || 0;
+            const paidAmount = parseFloat(document.getElementById('order-paid-amount').value) || 0;
+            const date = document.getElementById('order-date').value;
+            const status = document.getElementById('order-status').value;
+
+            // Baixa no estoque dos produtos do carrinho
+            for (let item of window.currentCart) {
+                const pIndex = system.products.findIndex(p => p.name === item.name);
+                if (pIndex > -1) {
+                    system.products[pIndex].qty -= item.qty;
+                }
+            }
+
+            // Registra o Pedido
+            system.orders.push({
+                client: client,
+                items: [...window.currentCart],
+                price: totalPrice,
+                paid: paidAmount,
+                date: date,
+                status: status
+            });
+
+            system.saveState();
+
+            // Limpa o formulário
+            window.currentCart = [];
+            newOrderForm.reset();
+            document.getElementById('order-date').value = new Date().toISOString().split('T')[0];
+            window.renderCart();
+
+            alert('Pedido confirmado com sucesso!');
+        });
+    }
+
+    // Inicializa a tela com o novo formato
+    system.updateUI();
+})();
+</script>
+<script>
+(function() {
+    // Garante a existência do carrinho na memória
+    window.currentCart = window.currentCart || [];
+
+    // Função para renderizar a lista de seleção com checkboxes
+    function renderCheckboxList() {
+        let listContainer = document.getElementById('products-checkbox-list');
+
+        // Se o contêiner ainda não existir, cria ele dentro da área de pedidos
+        if (!listContainer) {
+            const orderForm = document.getElementById('order-form');
+            if (!orderForm) return;
+
+            const oldSelect = document.getElementById('order-product-select');
+            const targetContainer = oldSelect ? oldSelect.parentElement : orderForm;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.gridColumn = '1 / -1';
+            wrapper.style.marginBottom = '1rem';
+            wrapper.innerHTML = `
+                <label style="font-size: 0.9rem; color: var(--accent); font-weight: 600; display: block; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-list-check"></i> Selecione os Produtos para o Pedido:
+                </label>
+                <div id="products-checkbox-list" style="max-height: 220px; overflow-y: auto; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem;"></div>
+            `;
+
+            if (oldSelect) {
+                oldSelect.style.display = 'none'; // Oculta o menu suspenso antigo
+            }
+
+            targetContainer.parentNode.insertBefore(wrapper, targetContainer);
+            listContainer = document.getElementById('products-checkbox-list');
+        }
+
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '';
+
+        if (!system.products || system.products.length === 0) {
+            listContainer.innerHTML = '<p style="color: var(--text-muted); padding: 0.5rem; font-size: 0.85rem;">Nenhum produto cadastrado no estoque.</p>';
+            updateCartAndTotals();
+            return;
+        }
+
+        // Renderiza cada produto cadastrado
+        system.products.forEach((prod) => {
+            const cartItem = window.currentCart.find(i => i.name === prod.name);
+            const isChecked = !!cartItem;
+            const currentQty = cartItem ? cartItem.qty : 1;
+            const unitPrice = prod.price ? `R$ ${parseFloat(prod.price).toFixed(2)}` : 'R$ 0,00';
+            const brandText = prod.brand ? ` (${prod.brand})` : '';
+
+            const itemDiv = document.createElement('div');
+            itemDiv.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.5rem;
+                margin-bottom: 0.3rem;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                background: ${isChecked ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-secondary)'};
+            `;
+
+            itemDiv.innerHTML = `
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; flex: 1;">
+                    <input type="checkbox" class="chk-prod" data-name="${prod.name}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px;">
+                    <div>
+                        <strong style="font-size: 0.88rem; display: block;">${prod.name}${brandText}</strong>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">${unitPrice} | Estoque: ${prod.qty} un</small>
+                    </div>
+                </label>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Qtd:</span>
+                    <input type="number" class="qty-prod" data-name="${prod.name}" value="${currentQty}" min="1" max="${prod.qty}" 
+                           style="width: 60px; padding: 0.2rem 0.4rem; font-size: 0.85rem; text-align: center;" ${!isChecked ? 'disabled' : ''}>
+                </div>
+            `;
+
+            listContainer.appendChild(itemDiv);
+        });
+
+        attachEvents();
+    }
+
+    // Recalcula o carrinho e os totais
+    function updateCartAndTotals() {
+        window.currentCart = [];
+
+        document.querySelectorAll('.chk-prod').forEach(chk => {
+            if (chk.checked) {
+                const prodName = chk.getAttribute('data-name');
+                const prod = system.products.find(p => p.name === prodName);
+                const qtyInput = document.querySelector(`.qty-prod[data-name="${prodName}"]`);
+                let qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+
+                if (prod) {
+                    if (qty > prod.qty) qty = prod.qty;
+                    window.currentCart.push({
+                        name: prod.name,
+                        qty: qty,
+                        price: prod.price || 0
+                    });
+                }
+            }
+        });
+
+        if (typeof window.renderCart === 'function') {
+            window.renderCart();
+        }
+    }
+
+    // Associa eventos de clique e mudança de quantidade
+    function attachEvents() {
+        document.querySelectorAll('.chk-prod').forEach(chk => {
+            chk.onclick = function() {
+                const prodName = this.getAttribute('data-name');
+                const qtyInput = document.querySelector(`.qty-prod[data-name="${prodName}"]`);
+                if (qtyInput) qtyInput.disabled = !this.checked;
+                updateCartAndTotals();
+                renderCheckboxList();
+            };
+        });
+
+        document.querySelectorAll('.qty-prod').forEach(input => {
+            input.oninput = function() {
+                updateCartAndTotals();
+            };
+        });
+    }
+
+    // Atualiza a lista automaticamente sempre que o estoque mudar
+    const prevUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        prevUpdateUI();
+        renderCheckboxList();
+    };
+
+    // Primeira renderização
+    renderCheckboxList();
+})();
+</script>
+<script>
+(function() {
+    // ==========================================================================
+    // 1. REPOSIÇÃO DE ESTOQUE AO DELETAR PEDIDO
+    // ==========================================================================
+    system.deleteOrder = function(index) {
+        if (confirm("Deseja cancelar/excluir este pedido? Os produtos retornarão automaticamente ao estoque.")) {
+            const ord = this.orders[index];
+
+            // Devolve a quantidade de cada item ao estoque
+            if (Array.isArray(ord.items)) {
+                ord.items.forEach(item => {
+                    const prodIndex = this.products.findIndex(p => p.name === item.name);
+                    if (prodIndex > -1) {
+                        this.products[prodIndex].qty += parseInt(item.qty || 1);
+                    }
+                });
+            } else if (ord.product) {
+                const prodIndex = this.products.findIndex(p => p.name === ord.product);
+                if (prodIndex > -1) {
+                    this.products[prodIndex].qty += parseInt(ord.qty || 1);
+                }
+            }
+
+            // Remove o pedido e salva
+            this.orders.splice(index, 1);
+            this.saveState();
+            alert("Pedido cancelado e produtos devolvidos ao estoque!");
+        }
+    };
+
+    // ==========================================================================
+    // 2. CAMPO DE DESCONTO / PROMOÇÃO NA TELA DE PEDIDOS
+    // ==========================================================================
+    function setupDiscountField() {
+        const orderForm = document.getElementById('order-form');
+        const paidInput = document.getElementById('order-paid-amount');
+
+        if (orderForm && paidInput && !document.getElementById('order-discount')) {
+            const discountContainer = document.createElement('div');
+            discountContainer.innerHTML = `
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Desconto / Promoção (R$)</label>
+                <input type="number" step="0.01" id="order-discount" placeholder="Ex: 10.00" min="0" value="0" style="width:100%;">
+            `;
+            
+            // Insere o campo de desconto logo antes do campo de valor pago
+            paidInput.parentElement.parentElement.insertBefore(discountContainer, paidInput.parentElement);
+
+            // Escuta alterações no campo de desconto para recalcular o total
+            document.getElementById('order-discount').addEventListener('input', recalculateTotalWithDiscount);
+        }
+    }
+
+    // Recalcula o valor final considerando o desconto
+    function recalculateTotalWithDiscount() {
+        const discount = parseFloat(document.getElementById('order-discount')?.value) || 0;
+        let subtotal = 0;
+
+        if (Array.isArray(window.currentCart)) {
+            subtotal = window.currentCart.reduce((sum, item) => sum + ((item.price || 0) * item.qty), 0);
+        }
+
+        const finalTotal = Math.max(0, subtotal - discount);
+        const totalPriceInput = document.getElementById('order-total-price');
+        
+        if (totalPriceInput) {
+            totalPriceInput.value = finalTotal.toFixed(2);
+        }
+
+        // Atualiza a situação do pagamento (Pendente / Parcial / Pago)
+        const paid = parseFloat(document.getElementById('order-paid-amount')?.value) || 0;
+        const statusSelect = document.getElementById('order-status');
+        if (statusSelect) {
+            if (paid <= 0) statusSelect.value = 'Pendente';
+            else if (paid >= finalTotal && finalTotal > 0) statusSelect.value = 'Pago';
+            else statusSelect.value = 'Parcial';
+        }
+    }
+
+    // Intercepta a renderização do carrinho para aplicar a lógica do desconto
+    const oldRenderCart = window.renderCart;
+    window.renderCart = function() {
+        if (typeof oldRenderCart === 'function') oldRenderCart();
+        recalculateTotalWithDiscount();
+    };
+
+    // ==========================================================================
+    // 3. FLUXO DE CAIXA (ENTRADAS, PENDÊNCIAS E FALTANTES)
+    // ==========================================================================
+    function setupFinancialDashboard() {
+        const dashboardTab = document.getElementById('tab-dashboard');
+        if (dashboardTab && !document.getElementById('financial-summary-card')) {
+            const financeCard = document.createElement('div');
+            financeCard.id = 'financial-summary-card';
+            financeCard.className = 'card';
+            financeCard.innerHTML = `
+                <div class="card-title"><i class="fa-solid fa-wallet"></i> Resumo Financeiro (Entradas e Pendências)</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 1rem; border-radius: var(--radius);">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Total de Entradas (Pago)</span>
+                        <strong id="fin-total-in" style="font-size: 1.4rem; color: var(--success);">R$ 0,00</strong>
+                    </div>
+
+                    <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 1rem; border-radius: var(--radius);">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">A Receber (Pendente)</span>
+                        <strong id="fin-total-pending" style="font-size: 1.4rem; color: var(--warning);">R$ 0,00</strong>
+                    </div>
+
+                    <div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent); padding: 1rem; border-radius: var(--radius);">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Faturamento Total</span>
+                        <strong id="fin-total-sales" style="font-size: 1.4rem; color: var(--accent);">R$ 0,00</strong>
+                    </div>
+
+                </div>
+            `;
+
+            dashboardTab.insertBefore(financeCard, dashboardTab.firstChild);
+        }
+    }
+
+    function updateFinancialMetrics() {
+        let totalPaid = 0;
+        let totalPending = 0;
+        let grandTotal = 0;
+
+        system.orders.forEach(ord => {
+            const price = parseFloat(ord.price || 0);
+            const paid = parseFloat(ord.paid || 0);
+
+            totalPaid += paid;
+            totalPending += Math.max(0, price - paid);
+            grandTotal += price;
+        });
+
+        const elIn = document.getElementById('fin-total-in');
+        const elPending = document.getElementById('fin-total-pending');
+        const elSales = document.getElementById('fin-total-sales');
+
+        if (elIn) elIn.textContent = `R$ ${totalPaid.toFixed(2)}`;
+        if (elPending) elPending.textContent = `R$ ${totalPending.toFixed(2)}`;
+        if (elSales) elSales.textContent = `R$ ${grandTotal.toFixed(2)}`;
+    }
+
+    // ==========================================================================
+    // 4. INTEGRAÇÃO E ATUALIZAÇÕES DO SISTEMA
+    // ==========================================================================
+    const originalUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        originalUpdateUI();
+        setupDiscountField();
+        setupFinancialDashboard();
+        updateFinancialMetrics();
+    };
+
+    // Execução Inicial
+    setupDiscountField();
+    setupFinancialDashboard();
+    updateFinancialMetrics();
+})();
+</script>
+<script>
+(function() {
+    const loginScreen = document.getElementById('login-screen');
+    if (!loginScreen) return;
+
+    // Renderiza a nova interface com abas de "Entrar" e "Criar Conta"
+    function renderLoginInterface() {
+        loginScreen.innerHTML = `
+            <div class="login-card" style="max-width: 420px; width: 100%;">
+                <i class="fa-solid fa-store" style="font-size: 2.5rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
+                <h2 style="margin-bottom: 1rem;">Acesso ao Sistema</h2>
+                
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-primary); padding: 0.3rem; border-radius: var(--radius);">
+                    <button type="button" id="btn-show-login" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: var(--accent);">Entrar</button>
+                    <button type="button" id="btn-show-register" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: transparent; color: var(--text-muted);">Criar Conta</button>
+                </div>
+
+                <form id="store-login-form">
+                    <input type="text" id="login-store-name" placeholder="Nome da Loja" required style="width: 100%; margin-bottom: 0.8rem;">
+                    <input type="password" id="login-store-pass" placeholder="Senha de Acesso" required style="width: 100%; margin-bottom: 1rem;">
+                    <button type="submit" style="width: 100%;"><i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema</button>
+                </form>
+
+                <form id="store-register-form" class="hidden">
+                    <input type="text" id="reg-store-name" placeholder="Nome da Loja / Empresa" required style="width: 100%; margin-bottom: 0.8rem;">
+                    <input type="text" id="reg-owner-name" placeholder="Nome do Proprietário" required style="width: 100%; margin-bottom: 0.8rem;">
+                    <input type="password" id="reg-store-pass" placeholder="Crie uma Senha" required style="width: 100%; margin-bottom: 1rem;">
+                    <button type="submit" style="width: 100%; background: var(--success);"><i class="fa-solid fa-user-plus"></i> Cadastrar e Acessar</button>
+                </form>
+            </div>
+        `;
+
+        bindLoginEvents();
+    }
+
+    function bindLoginEvents() {
+        const btnLogin = document.getElementById('btn-show-login');
+        const btnRegister = document.getElementById('btn-show-register');
+        const formLogin = document.getElementById('store-login-form');
+        const formRegister = document.getElementById('store-register-form');
+
+        // Alternar para tela de Login
+        btnLogin.addEventListener('click', () => {
+            btnLogin.style.background = 'var(--accent)';
+            btnLogin.style.color = '#fff';
+            btnRegister.style.background = 'transparent';
+            btnRegister.style.color = 'var(--text-muted)';
+            formLogin.classList.remove('hidden');
+            formRegister.classList.add('hidden');
+        });
+
+        // Alternar para tela de Criar Conta
+        btnRegister.addEventListener('click', () => {
+            btnRegister.style.background = 'var(--accent)';
+            btnRegister.style.color = '#fff';
+            btnLogin.style.background = 'transparent';
+            btnLogin.style.color = 'var(--text-muted)';
+            formRegister.classList.remove('hidden');
+            formLogin.classList.add('hidden');
+        });
+
+        // Ação do Formulário de Login
+        formLogin.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputStore = document.getElementById('login-store-name').value.trim();
+            const inputPass = document.getElementById('login-store-pass').value;
+
+            const savedCompany = system.company ? system.company.name : '';
+            const savedPass = system.password || '1234';
+
+            // Valida o Nome da Loja e a Senha digitados pelo Funcionário
+            if (inputStore.toLowerCase() === savedCompany.toLowerCase() && inputPass === savedPass) {
+                sessionStorage.setItem('gp_authenticated', 'true');
+                system.checkAuth();
+            } else if (!savedCompany) {
+                alert('Nenhuma loja cadastrada ainda. Clique na aba "Criar Conta" para começar.');
+            } else {
+                alert('Nome da loja ou senha incorretos! Verifique os dados com o gerente.');
+            }
+        });
+
+        // Ação do Formulário de Criar Conta
+        formRegister.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const storeName = document.getElementById('reg-store-name').value.trim();
+            const ownerName = document.getElementById('reg-owner-name').value.trim();
+            const password = document.getElementById('reg-store-pass').value;
+
+            // Salva as credenciais da loja no sistema
+            system.company = { name: storeName, owner: ownerName };
+            system.password = password;
+            system.saveState();
+
+            // Autentica o acesso
+            sessionStorage.setItem('gp_authenticated', 'true');
+            system.checkAuth();
+
+            alert('Conta criada com sucesso!');
+        });
+    }
+
+    // Inicializa a nova tela de login
+    renderLoginInterface();
+})();
+</script>
+<script>
+(function() {
+    // 1. Reestrutura os campos de Desconto, Promoção e Seleção do Status
+    function setupOrderFields() {
+        const orderForm = document.getElementById('order-form');
+        const paidInput = document.getElementById('order-paid-amount');
+
+        if (orderForm && paidInput && !document.getElementById('order-discount-val')) {
+            const container = paidInput.parentElement.parentElement;
+            
+            // Remove o campo de desconto antigo se existir
+            const oldDiscount = document.getElementById('order-discount');
+            if (oldDiscount) oldDiscount.parentElement.remove();
+
+            // Elemento HTML com Desconto e Promoção separados
+            const extraFields = document.createElement('div');
+            extraFields.style.gridColumn = '1 / -1';
+            extraFields.innerHTML = `
+                <div class="form-grid" style="margin-bottom: 0.5rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">Desconto (R$)</label>
+                        <input type="number" step="0.01" id="order-discount-val" placeholder="0.00" min="0" value="0" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">Promoção (R$)</label>
+                        <input type="number" step="0.01" id="order-promo-val" placeholder="0.00" min="0" value="0" style="width:100%;">
+                    </div>
+                </div>
+            `;
+
+            container.insertBefore(extraFields, paidInput.parentElement);
+
+            // Libera o campo de Seleção de Status do Pagamento para escolha manual
+            const statusSelect = document.getElementById('order-status');
+            if (statusSelect) {
+                statusSelect.disabled = false;
+                statusSelect.style.opacity = '1';
+                statusSelect.innerHTML = `
+                    <option value="Pendente" selected>Pendente</option>
+                    <option value="Entrada">Entrada</option>
+                    <option value="Parcelado">Parcelado</option>
+                    <option value="Pago">Pago</option>
+                `;
+            }
+
+            // Associa os cálculos aos eventos de digitação
+            document.getElementById('order-discount-val').addEventListener('input', recalculateTotalWithDiscounts);
+            document.getElementById('order-promo-val').addEventListener('input', recalculateTotalWithDiscounts);
+        }
+    }
+
+    // 2. Recalcula o valor final aplicando Desconto e Promoção
+    function recalculateTotalWithDiscounts() {
+        const discount = parseFloat(document.getElementById('order-discount-val')?.value) || 0;
+        const promo = parseFloat(document.getElementById('order-promo-val')?.value) || 0;
+        let subtotal = 0;
+
+        if (Array.isArray(window.currentCart)) {
+            subtotal = window.currentCart.reduce((sum, item) => sum + ((item.price || 0) * item.qty), 0);
+        }
+
+        const totalDeductions = discount + promo;
+        const finalTotal = Math.max(0, subtotal - totalDeductions);
+        
+        const totalPriceInput = document.getElementById('order-total-price');
+        if (totalPriceInput) {
+            totalPriceInput.value = finalTotal.toFixed(2);
+        }
+    }
+
+    // 3. Atualiza as opções de status exibidas na tabela de Pedidos
+    const originalUpdateUI = system.updateUI.bind(system);
+    system.updateUI = function() {
+        originalUpdateUI();
+        setupOrderFields();
+
+        // Atualiza a estilização das cores dos badges de status na tabela
+        document.querySelectorAll('#orders-table-body tr').forEach((tr, index) => {
+            const ord = system.orders[index];
+            if (!ord) return;
+
+            const badgeSpan = tr.querySelector('.badge');
+            if (badgeSpan) {
+                let badgeStyle = 'background: rgba(245, 158, 11, 0.2); color: var(--warning);'; // Pendente
+                
+                if (ord.status === 'Pago') {
+                    badgeStyle = 'background: rgba(16, 185, 129, 0.2); color: var(--success);';
+                } else if (ord.status === 'Entrada') {
+                    badgeStyle = 'background: rgba(59, 130, 246, 0.2); color: var(--accent);';
+                } else if (ord.status === 'Parcelado') {
+                    badgeStyle = 'background: rgba(139, 92, 246, 0.2); color: #8b5cf6;';
+                }
+
+                badgeSpan.setAttribute('style', badgeStyle);
+                badgeSpan.textContent = ord.status || 'Pendente';
+            }
+        });
+    };
+
+    // Ajusta a função de renderização do carrinho
+    const oldRenderCart = window.renderCart;
+    window.renderCart = function() {
+        if (typeof oldRenderCart === 'function') oldRenderCart();
+        recalculateTotalWithDiscounts();
+    };
+
+    // Inicialização
+    setupOrderFields();
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+(function() {
+  // 1. Conexão com o Supabase
+  const SUPABASE_URL = 'https://rxwmujhltpfzwqlszwew.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_WcYQJkAuTouEs9Ga8DiR7Q_KxYLqG6q'; // Insira sua chave anon/publishable aqui
+
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Função auxiliar para padronizar o ID da loja
+  function getStoreId(name) {
+    return name.toLowerCase().trim().replace(/\s+/g, '-');
+  }
+
+  // 2. Sobrescreve a função de salvar do sistema para gravar na Nuvem
+  if (typeof system !== 'undefined') {
+    system.saveState = async function() {
+      if (!this.company || !this.company.name) return;
+
+      const storeId = getStoreId(this.company.name);
+
+      const { error } = await _supabase
+        .from('lojas')
+        .upsert({
+          id: storeId,
+          company: this.company,
+          password: this.password,
+          products: this.products || [],
+          orders: this.orders || []
+        });
+
+      if (error) console.error('Erro ao sincronizar na nuvem:', error);
+
+      // Cópia local de segurança
+      localStorage.setItem('gp_system_state', JSON.stringify({
+        company: this.company,
+        password: this.password,
+        products: this.products,
+        orders: this.orders
+      }));
+    };
+  }
+
+  // 3. Intercepta a Criacao de Conta (Notebook/Administrador)
+  const registerForm = document.getElementById('store-register-form') || document.querySelector('form[action*="register"]');
+  if (registerForm) {
+    registerForm.onsubmit = async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const nameInput = document.getElementById('reg-store-name') || registerForm.querySelector('input[type="text"]');
+      const passInput = document.getElementById('reg-store-pass') || registerForm.querySelector('input[type="password"]');
+
+      if (!nameInput || !passInput) return;
+
+      const companyName = nameInput.value.trim();
+      const pass = passInput.value;
+      const storeId = getStoreId(companyName);
+
+      const companyObj = { name: companyName };
+
+      // Insere a nova loja no Supabase
+      const { error } = await _supabase
+        .from('lojas')
+        .insert({
+          id: storeId,
+          company: companyObj,
+          password: pass,
+          products: [],
+          orders: []
+        });
+
+      if (error) {
+        alert('Esta loja já existe ou ocorreu um erro ao cadastrar na nuvem!');
+      } else {
+        alert('✅ Conta criada com sucesso na nuvem! Os funcionários já podem entrar no celular.');
+        location.reload();
+      }
+    };
+  }
+
+  // 4. Intercepta o Login (Funcionários/Celular)
+  const loginForm = document.getElementById('store-login-form') || document.querySelector('form');
+  if (loginForm) {
+    loginForm.onsubmit = async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const nameInput = document.getElementById('login-store-name') || loginForm.querySelector('input[type="text"]');
+      const passInput = document.getElementById('login-store-pass') || loginForm.querySelector('input[type="password"]');
+
+      if (!nameInput || !passInput) return;
+
+      const inputStore = nameInput.value.trim();
+      const inputPass = passInput.value;
+      const storeId = getStoreId(inputStore);
+
+      // Busca os dados da loja no Supabase
+      const { data, error } = await _supabase
+        .from('lojas')
+        .select('*')
+        .eq('id', storeId)
+        .maybeSingle();
+
+      if (data) {
+        if (data.password === inputPass) {
+          if (typeof system !== 'undefined') {
+            system.company = data.company;
+            system.password = data.password;
+            system.products = data.products || [];
+            system.orders = data.orders || [];
+
+            sessionStorage.setItem('gp_authenticated', 'true');
+            if (system.checkAuth) system.checkAuth();
+            if (system.updateUI) system.updateUI();
+          }
+
+          // Escuta alterações na nuvem em tempo real (atualiza celular se algo mudar no PC)
+          _supabase
+            .channel('public:lojas:' + storeId)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lojas', filter: `id=eq.${storeId}` }, payload => {
+              if (payload.new && typeof system !== 'undefined') {
+                system.products = payload.new.products || [];
+                system.orders = payload.new.orders || [];
+                if (system.updateUI) system.updateUI();
+              }
+            })
+            .subscribe();
+
+          alert('🚀 Login realizado com sucesso!');
+        } else {
+          alert('❌ Senha incorreta!');
+        }
+      } else {
+        alert('❌ Loja não encontrada na nuvem! Crie a conta no notebook primeiro.');
+      }
+    };
+  }
+})();
+</script>
+
+<style>
+  /* Personalização dos botões e campos de entrada */
+  button[type="submit"], .btn-primary {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px 0 rgba(220, 38, 38, 0.39) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  button[type="submit"]:hover, .btn-primary:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(220, 38, 38, 0.5) !important;
+  }
+
+  input:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+  }
+
+  .accent-red-title {
+    color: #f87171 !important;
+  }
+</style>
+</body>
+</html>
