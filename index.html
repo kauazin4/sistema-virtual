@@ -578,7 +578,13 @@
                 this.products = JSON.parse(localStorage.getItem('gp_products')) || [];
                 this.orders = JSON.parse(localStorage.getItem('gp_orders')) || [];
                 
-                this.initApp();
+                // Inicia o sistema e carrega os dados da nuvem
+                this.init();
+            }
+
+            async init() {
+                await this.loadState();
+                this.checkAuth();
             }
 
             initApp() {
