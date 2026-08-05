@@ -585,13 +585,35 @@
             }
 
             // Garante persistência dos dados
-            saveState() {
-                localStorage.setItem('gp_company', JSON.stringify(this.company));
-                localStorage.setItem('gp_password', this.password);
-                localStorage.setItem('gp_products', JSON.stringify(this.products));
-                localStorage.setItem('gp_orders', JSON.stringify(this.orders));
-                this.updateUI();
-            }
+          async saveState() {
+    // Salva no navegador (local)
+    localStorage.setItem('gp_company', JSON.stringify(this.company));
+    localStorage.setItem('gp_password', this.password);
+    localStorage.setItem('gp_products', JSON.stringify(this.products));
+    localStorage.setItem('gp_orders', JSON.stringify(this.orders));
+    
+    this.updateUI();
+
+    // Envia para a nuvem (Supabase)
+    const storeId = localStorage.setItem('gp_store_id') || localStorage.getItem('gp_store_id');
+    
+    if (typeof supabase !== 'undefined' && storeId) {
+        const { error } = await supabase
+            .from('lojas')
+            .update({ 
+                products: this.products, 
+                orders: this.orders,
+                company: this.company 
+            })
+            .eq('id', storeId);
+
+        if (error) {
+            console.error('Erro ao salvar no Supabase:', error.message);
+        } else {
+            console.log('Produtos salvos na nuvem com sucesso!');
+        }
+    }
+}
 
             // Sistema de Autenticação Basico
             checkAuth() {
