@@ -2247,39 +2247,31 @@ loginForm.onsubmit = function(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Pega o campo da senha
     const passInput = document.getElementById('passwordInput') || document.querySelector('input[type="password"]');
     const typedPassword = passInput ? passInput.value : '';
-    
-    // Pega a senha salva ou usa a padrão '1234'
     const savedPassword = localStorage.getItem('gp_password') || '1234';
 
     if (typedPassword === savedPassword || typedPassword === '1234') {
-        // Marca como logado no navegador
         localStorage.setItem('gp_logged_in', 'true');
         
-        // Esconde a tela de login
-        const loginScreen = document.getElementById('loginScreen') || document.getElementById('login-screen') || document.querySelector('.login-container');
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
+        // Força a alteração das telas buscando todas as estruturas comuns
+        document.querySelectorAll('#loginScreen, #login-screen, .login-container').forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+        });
         
-        // Exibe o sistema principal (tenta todos os IDs e classes possíveis)
-        const mainApp = document.getElementById('mainApp') || document.getElementById('main-app') || document.getElementById('app') || document.querySelector('.app-container') || document.querySelector('.container');
-        if (mainApp) {
-            mainApp.style.display = 'block';
-            mainApp.style.visibility = 'visible';
-            mainApp.classList.remove('d-none', 'hidden');
-        }
+        document.querySelectorAll('#mainApp, #main-app, #app, .app-container').forEach(el => {
+            el.style.setProperty('display', 'block', 'important');
+            el.classList.remove('d-none', 'hidden');
+        });
 
-        // Atualiza a interface se o sistema já tiver carregado
         if (typeof system !== 'undefined' && system.updateUI) {
             system.updateUI();
         }
     } else {
         alert('Senha incorreta!');
     }
-};})();
+};
+})();
 </script>
 
 <style>
