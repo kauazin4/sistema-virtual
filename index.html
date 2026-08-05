@@ -390,6 +390,13 @@
             }
         }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://grruiwlevvbzreayukuc.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_G3HY6meRl4uJ5ZWqvSAZ6g_L8PO-oYW';
+  
+  window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 
@@ -585,35 +592,35 @@
             }
 
             // Garante persistência dos dados
-          async saveState() {
-    // Salva no navegador (local)
-    localStorage.setItem('gp_company', JSON.stringify(this.company));
-    localStorage.setItem('gp_password', this.password);
-    localStorage.setItem('gp_products', JSON.stringify(this.products));
-    localStorage.setItem('gp_orders', JSON.stringify(this.orders));
-    
-    this.updateUI();
+       // Garante persistência dos dados (Local + Nuvem)
+    async saveState() {
+        // 1. Salva no navegador (local)
+        localStorage.setItem('gp_company', JSON.stringify(this.company));
+        localStorage.setItem('gp_password', this.password);
+        localStorage.setItem('gp_products', JSON.stringify(this.products));
+        localStorage.setItem('gp_orders', JSON.stringify(this.orders));
+        this.updateUI();
 
-    // Envia para a nuvem (Supabase)
-    const storeId = localStorage.setItem('gp_store_id') || localStorage.getItem('gp_store_id');
-    
-    if (typeof supabase !== 'undefined' && storeId) {
-        const { error } = await supabase
-            .from('lojas')
-            .update({ 
-                products: this.products, 
-                orders: this.orders,
-                company: this.company 
-            })
-            .eq('id', storeId);
+        // 2. Envia para a nuvem no Supabase
+        const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
+        
+        if (window.supabase) {
+            const { error } = await window.supabase
+                .from('lojas')
+                .upsert({ 
+                    id: storeId,
+                    products: this.products, 
+                    orders: this.orders,
+                    company: this.company 
+                });
 
-        if (error) {
-            console.error('Erro ao salvar no Supabase:', error.message);
-        } else {
-            console.log('Produtos salvos na nuvem com sucesso!');
+            if (error) {
+                console.error('Erro ao salvar no Supabase:', error.message);
+            } else {
+                console.log('Dados salvos na nuvem com sucesso!');
+            }
         }
     }
-}
 
             // Sistema de Autenticação Basico
             checkAuth() {
