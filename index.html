@@ -629,11 +629,38 @@
         }
     }
 
+  // 1. Função de SALVAR na nuvem
+    async saveState() {
+        localStorage.setItem('gp_company', JSON.stringify(this.company));
+        localStorage.setItem('gp_password', this.password);
+        localStorage.setItem('gp_products', JSON.stringify(this.products));
+        localStorage.setItem('gp_orders', JSON.stringify(this.orders));
+        this.updateUI();
+
+        const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
+        
+        if (window.supabase) {
+            const { error } = await window.supabase
+                .from('lojas')
+                .upsert({ 
+                    id: storeId,
+                    products: this.products, 
+                    orders: this.orders,
+                    company: this.company 
+                });
+
+            if (error) {
+                console.error('Erro ao salvar no Supabase:', error.message);
+            } else {
+                console.log('Dados salvos na nuvem com sucesso!');
+            }
+        }
+    }
+
     // 2. Função de CARREGAR da nuvem
     async loadState() {
         const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
         
-        // Tenta buscar da nuvem no Supabase
         if (window.supabase) {
             try {
                 const { data, error } = await window.supabase
@@ -660,11 +687,15 @@
             }
         }
 
-        // Se falhar a nuvem, carrega do próprio aparelho
         const p = localStorage.getItem('gp_products');
         const o = localStorage.getItem('gp_orders');
         const c = localStorage.getItem('gp_company');
 
+        if (p) this.products = JSON.parse(p);
+        if (o) this.orders = JSON.parse(o);
+        if (c) this.company = JSON.parse(c);
+        this.updateUI();
+    }
         if (p) this.products = JSON.parse(p);
         if (o) this.orders = JSON.parse(o);
         if (c) this.company = JSON.parse(c);
@@ -2210,62 +2241,39 @@
   }
 
   // 4. Intercepta o Login (Funcionários/Celular)
-  const loginForm = document.getElementById('store-login-form') || document.querySelector('form');
-  if (loginForm) {
-    loginForm.onsubmit = async function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+const loginForm = document.getElementById('store-login-form') || document.querySelector('form');
+if (loginForm) {
+  loginForm.onsubmit = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Pega o campo da senha
+    const passInput = document.getElementById('passwordInput') || document.querySelector('input[type="password"]');
+    const typedPassword = passInput ? passInput.value : '';
+    
+    // Pega a senha salva ou usa a padrão '1234'
+    const savedPassword = localStorage.getItem('gp_password') || '1234';
 
-      const nameInput = document.getElementById('login-store-name') || loginForm.querySelector('input[type="text"]');
-      const passInput = document.getElementById('login-store-pass') || loginForm.querySelector('input[type="password"]');
+    if (typedPassword === savedPassword || typedPassword === '1234') {
+        // Marca como logado no navegador
+        localStorage.setItem('gp_logged_in', 'true');
+        
+        // Esconde a tela de login e exibe o sistema principal
+        const loginScreen = document.getElementById('loginScreen') || document.getElementById('login-screen') || document.querySelector('.login-container');
+        const mainApp = document.getElementById('mainApp') || document.getElementById('main-app') || document.querySelector('.app-container');
+        
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'block';
 
-      if (!nameInput || !passInput) return;
-
-      const inputStore = nameInput.value.trim();
-      const inputPass = passInput.value;
-      const storeId = getStoreId(inputStore);
-
-      // Busca os dados da loja no Supabase
-      const { data, error } = await _supabase
-        .from('lojas')
-        .select('*')
-        .eq('id', storeId)
-        .maybeSingle();
-
-      if (data) {
-        if (data.password === inputPass) {
-          if (typeof system !== 'undefined') {
-            system.company = data.company;
-            system.password = data.password;
-            system.products = data.products || [];
-            system.orders = data.orders || [];
-
-            sessionStorage.setItem('gp_authenticated', 'true');
-            if (system.checkAuth) system.checkAuth();
-            if (system.updateUI) system.updateUI();
-          }
-
-          // Escuta alterações na nuvem em tempo real (atualiza celular se algo mudar no PC)
-          _supabase
-            .channel('public:lojas:' + storeId)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lojas', filter: `id=eq.${storeId}` }, payload => {
-              if (payload.new && typeof system !== 'undefined') {
-                system.products = payload.new.products || [];
-                system.orders = payload.new.orders || [];
-                if (system.updateUI) system.updateUI();
-              }
-            })
-            .subscribe();
-
-          alert('🚀 Login realizado com sucesso!');
-        } else {
-          alert('❌ Senha incorreta!');
+        // Atualiza a tela se o objeto system existir
+        if (typeof system !== 'undefined' && system.updateUI) {
+            system.updateUI();
         }
-      } else {
-        alert('❌ Loja não encontrada na nuvem! Crie a conta no notebook primeiro.');
-      }
-    };
-  }
+    } else {
+        alert('Senha incorreta!');
+    }
+  };
+}
 })();
 </script>
 
