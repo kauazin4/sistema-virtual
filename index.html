@@ -2243,7 +2243,7 @@
   // 4. Intercepta o Login (Funcionários/Celular)
 const loginForm = document.getElementById('store-login-form') || document.querySelector('form');
 if (loginForm) {
-  loginForm.onsubmit = function(e) {
+loginForm.onsubmit = function(e) {
     e.preventDefault();
     e.stopPropagation();
     
@@ -2258,23 +2258,28 @@ if (loginForm) {
         // Marca como logado no navegador
         localStorage.setItem('gp_logged_in', 'true');
         
-        // Esconde a tela de login e exibe o sistema principal
+        // Esconde a tela de login
         const loginScreen = document.getElementById('loginScreen') || document.getElementById('login-screen') || document.querySelector('.login-container');
-        const mainApp = document.getElementById('mainApp') || document.getElementById('main-app') || document.querySelector('.app-container');
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
         
-        if (loginScreen) loginScreen.style.display = 'none';
-        if (mainApp) mainApp.style.display = 'block';
+        // Exibe o sistema principal (tenta todos os IDs e classes possíveis)
+        const mainApp = document.getElementById('mainApp') || document.getElementById('main-app') || document.getElementById('app') || document.querySelector('.app-container') || document.querySelector('.container');
+        if (mainApp) {
+            mainApp.style.display = 'block';
+            mainApp.style.visibility = 'visible';
+            mainApp.classList.remove('d-none', 'hidden');
+        }
 
-        // Atualiza a tela se o objeto system existir
+        // Atualiza a interface se o sistema já tiver carregado
         if (typeof system !== 'undefined' && system.updateUI) {
             system.updateUI();
         }
     } else {
         alert('Senha incorreta!');
     }
-  };
-}
-})();
+};})();
 </script>
 
 <style>
