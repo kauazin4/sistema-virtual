@@ -599,56 +599,16 @@
 
             // Garante persistência dos dados
        // Garante persistência dos dados (Local + Nuvem)
+// 1. Função de SALVAR na nuvem
     async saveState() {
-async loadState() {
-        const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
-        
-        // 1. Tenta buscar os dados da nuvem (Supabase)
-        if (window.supabase) {
-            try {
-                const { data, error } = await window.supabase
-                    .from('lojas')
-                    .select('*')
-                    .eq('id', storeId)
-                    .single();
-
-                if (data && !error) {
-                    this.products = data.products || [];
-                    this.orders = data.orders || [];
-                    this.company = data.company || this.company;
-                    
-                    // Salva no navegador local para garantir
-                    localStorage.setItem('gp_company', JSON.stringify(this.company));
-                    localStorage.setItem('gp_products', JSON.stringify(this.products));
-                    localStorage.setItem('gp_orders', JSON.stringify(this.orders));
-                    
-                    this.updateUI();
-                    console.log('Dados carregados da nuvem!');
-                    return;
-                }
-            } catch (err) {
-                console.error('Erro ao buscar do Supabase:', err);
-            }
-        }
-
-        // 2. Se a nuvem falhar, carrega os dados locais do próprio aparelho
-        const p = localStorage.getItem('gp_products');
-        const o = localStorage.getItem('gp_orders');
-        const c = localStorage.getItem('gp_company');
-
-        if (p) this.products = JSON.parse(p);
-        if (o) this.orders = JSON.parse(o);
-        if (c) this.company = JSON.parse(c);
-        this.updateUI();
-    }
-        // 1. Salva no navegador (local)
+        // Salva no navegador local
         localStorage.setItem('gp_company', JSON.stringify(this.company));
         localStorage.setItem('gp_password', this.password);
         localStorage.setItem('gp_products', JSON.stringify(this.products));
         localStorage.setItem('gp_orders', JSON.stringify(this.orders));
         this.updateUI();
 
-        // 2. Envia para a nuvem no Supabase
+        // Envia para a nuvem no Supabase
         const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
         
         if (window.supabase) {
@@ -668,10 +628,12 @@ async loadState() {
             }
         }
     }
-async loadState() {
+
+    // 2. Função de CARREGAR da nuvem
+    async loadState() {
         const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
         
-        // 1. Tenta buscar os dados da nuvem (Supabase)
+        // Tenta buscar da nuvem no Supabase
         if (window.supabase) {
             try {
                 const { data, error } = await window.supabase
@@ -685,7 +647,6 @@ async loadState() {
                     this.orders = data.orders || [];
                     this.company = data.company || this.company;
                     
-                    // Salva no navegador local para garantir
                     localStorage.setItem('gp_company', JSON.stringify(this.company));
                     localStorage.setItem('gp_products', JSON.stringify(this.products));
                     localStorage.setItem('gp_orders', JSON.stringify(this.orders));
@@ -699,6 +660,16 @@ async loadState() {
             }
         }
 
+        // Se falhar a nuvem, carrega do próprio aparelho
+        const p = localStorage.getItem('gp_products');
+        const o = localStorage.getItem('gp_orders');
+        const c = localStorage.getItem('gp_company');
+
+        if (p) this.products = JSON.parse(p);
+        if (o) this.orders = JSON.parse(o);
+        if (c) this.company = JSON.parse(c);
+        this.updateUI();
+    }
         // 2. Se a nuvem falhar, carrega os dados locais do próprio aparelho
         const p = localStorage.getItem('gp_products');
         const o = localStorage.getItem('gp_orders');
