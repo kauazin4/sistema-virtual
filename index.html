@@ -600,36 +600,7 @@
             // Garante persistência dos dados
        // Garante persistência dos dados (Local + Nuvem)
 // 1. Função de SALVAR na nuvem
-    async saveState() {
-        // Salva no navegador local
-        localStorage.setItem('gp_company', JSON.stringify(this.company));
-        localStorage.setItem('gp_password', this.password);
-        localStorage.setItem('gp_products', JSON.stringify(this.products));
-        localStorage.setItem('gp_orders', JSON.stringify(this.orders));
-        this.updateUI();
-
-        // Envia para a nuvem no Supabase
-        const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
-        
-        if (window.supabase) {
-            const { error } = await window.supabase
-                .from('lojas')
-                .upsert({ 
-                    id: storeId,
-                    products: this.products, 
-                    orders: this.orders,
-                    company: this.company 
-                });
-
-            if (error) {
-                console.error('Erro ao salvar no Supabase:', error.message);
-            } else {
-                console.log('Dados salvos na nuvem com sucesso!');
-            }
-        }
-    }
-
-  // 1. Função de SALVAR na nuvem
+     // 1. Função de SALVAR na nuvem
     async saveState() {
         localStorage.setItem('gp_company', JSON.stringify(this.company));
         localStorage.setItem('gp_password', this.password);
@@ -673,44 +644,49 @@
                     this.products = data.products || [];
                     this.orders = data.orders || [];
                     this.company = data.company || this.company;
-                    
-                    localStorage.setItem('gp_company', JSON.stringify(this.company));
-                    localStorage.setItem('gp_products', JSON.stringify(this.products));
-                    localStorage.setItem('gp_orders', JSON.stringify(this.orders));
-                    
-                    this.updateUI();
-                    console.log('Dados carregados da nuvem!');
-                    return;
-                }
-            } catch (err) {
-                console.error('Erro ao buscar do Supabase:', err);
+                   
+  async loadState() {
+    const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
+
+    if (window.supabase) {
+        try {
+            const { data, error } = await window.supabase
+                .from('lojas')
+                .select('*')
+                .eq('id', storeId)
+                .single();
+
+            if (data && !error) {
+                this.products = data.products || [];
+                this.orders = data.orders || [];
+                this.company = data.company || this.company;
+
+                localStorage.setItem('gp_company', JSON.stringify(this.company));
+                localStorage.setItem('gp_products', JSON.stringify(this.products));
+                localStorage.setItem('gp_orders', JSON.stringify(this.orders));
+
+                this.updateUI();
+                console.log('Dados carregados da nuvem!');
+                return;
             }
+        } catch (err) {
+            console.error('Erro ao buscar do Supabase:', err);
         }
-
-        const p = localStorage.getItem('gp_products');
-        const o = localStorage.getItem('gp_orders');
-        const c = localStorage.getItem('gp_company');
-
-        if (p) this.products = JSON.parse(p);
-        if (o) this.orders = JSON.parse(o);
-        if (c) this.company = JSON.parse(c);
-        this.updateUI();
     }
-        if (p) this.products = JSON.parse(p);
-        if (o) this.orders = JSON.parse(o);
-        if (c) this.company = JSON.parse(c);
-        this.updateUI();
-    }
-        // 2. Se a nuvem falhar, carrega os dados locais do próprio aparelho
-        const p = localStorage.getItem('gp_products');
-        const o = localStorage.getItem('gp_orders');
-        const c = localStorage.getItem('gp_company');
 
-        if (p) this.products = JSON.parse(p);
-        if (o) this.orders = JSON.parse(o);
-        if (c) this.company = JSON.parse(c);
-        this.updateUI();
-    } 
+    // Aqui continua o restante da função (carregar do localStorage caso a nuvem falhe)
+}
+
+// Se a nuvem falhar, usa os dados locais
+const p = localStorage.getItem('gp_products');
+const o = localStorage.getItem('gp_orders');
+const c = localStorage.getItem('gp_company');
+
+if (p) this.products = JSON.parse(p);
+if (o) this.orders = JSON.parse(o);
+if (c) this.company = JSON.parse(c);
+
+this.updateUI();
             // Sistema de Autenticação Basico
             checkAuth() {
                 const isAuthenticated = sessionStorage.getItem('gp_authenticated') === 'true';
