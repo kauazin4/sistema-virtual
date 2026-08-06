@@ -644,35 +644,6 @@
                     this.products = data.products || [];
                     this.orders = data.orders || [];
                     this.company = data.company || this.company;
-                   
-  async loadState() {
-    const storeId = localStorage.getItem('gp_store_id') || 'loja_principal';
-
-    if (window.supabase) {
-        try {
-            const { data, error } = await window.supabase
-                .from('lojas')
-                .select('*')
-                .eq('id', storeId)
-                .single();
-
-            if (data && !error) {
-                this.products = data.products || [];
-                this.orders = data.orders || [];
-                this.company = data.company || this.company;
-
-                localStorage.setItem('gp_company', JSON.stringify(this.company));
-                localStorage.setItem('gp_products', JSON.stringify(this.products));
-                localStorage.setItem('gp_orders', JSON.stringify(this.orders));
-
-                this.updateUI();
-                console.log('Dados carregados da nuvem!');
-                return;
-            }
-        } catch (err) {
-            console.error('Erro ao buscar do Supabase:', err);
-        }
-    }
 
     // Aqui continua o restante da função (carregar do localStorage caso a nuvem falhe)
 }
@@ -689,6 +660,7 @@ if (c) this.company = JSON.parse(c);
 this.updateUI();
 }
             // Sistema de Autenticação Basico
+            // se a nuvem falhar, usa os dados locais
             checkAuth() {
                 const isAuthenticated = sessionStorage.getItem('gp_authenticated') === 'true';
                 if (isAuthenticated) {
